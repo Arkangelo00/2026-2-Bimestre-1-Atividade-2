@@ -12,7 +12,7 @@ O grupo de trabalho foi formado por jadson,luiz e arkângelo.
 
 ### Informações gerais sobre typescript
 
-FIXME
+
 > qual o objetivo e o paradgima da linguagem? O objetivo do TypeScript é adicionar tipagem estática ao JavaScript para evitar erros durante a escrita do código e facilitar o desenvolvimento de projetos grandes. Ele é uma linguagem multi-paradigma
 > esta disponível onde?Está disponível para execução em ambientes JavaScript e roda em todos os navegadores web
 
