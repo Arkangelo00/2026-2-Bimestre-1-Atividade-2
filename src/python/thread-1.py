@@ -11,7 +11,7 @@ def minha_funcao():
     time.sleep(2)
     print("Thread finalizada!")
 
-def main();
+def main():
     # Criar a thread
     thread = threading.Thread(target=minha_funcao)
 

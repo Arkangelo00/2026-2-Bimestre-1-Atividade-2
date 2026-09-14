@@ -1,0 +1,9 @@
+#Thread 2 - TypeScript (Luiz)
+
+Pra fazer essa atividade eu não tinha nem Docker nem Node instalados no PC, então antes de escrever qualquer código eu já tive que parar pra instalar o Docker Desktop e configurar o WSL2. Isso já tomou um tempão.
+
+Na parte do código, o Python usa a biblioteca threading e passa os argumentos pra thread direto no args=("Maria", 3). Em TypeScript não tem essa mesma ideia de thread, o que mais se parece é o worker_threads, que cria um processo separado (worker). Só que ali não dá pra passar argumento do mesmo jeito, então usei o workerData, que é tipo um objeto que eu mando junto na hora de criar o worker. Também teve que usar o isMainThread pra separar o que roda "fora" (thread principal, que cria o worker) do que roda "dentro" (a thread nova, que realmente executa a função saudar), meio parecido com o if __name__ == "__main__": do Python só que dos dois lados.
+
+Deu um erro chato na hora de rodar (ERR_UNKNOWN_FILE_EXTENSION), porque o projeto roda TypeScript direto com ts-node, mas o worker criado não sabia interpretar arquivo .ts. Resolvi passando execArgv: ['-r', 'ts-node/register'] na criação do worker.
+
+Tentei resolver os erros usando o Gemini primeiro, mas ele ficou me mandando em círculos, dando soluções que contradiziam uma a outra e às vezes nem lembrava o que já tinha sugerido antes, então acabei recomeçando o código do zero e terminando com ajuda do Claude. No fim entendi que a diferença mais importante entre Python e TypeScript aqui é que no Python as threads compartilham a mesma memória, e no Node cada worker roda isolado e só troca dado através de mensagens.
