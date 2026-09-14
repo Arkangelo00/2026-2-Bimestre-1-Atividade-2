@@ -1,33 +1,61 @@
-# Relatório de implementação de linha de execução em Typescript
+# Relatório de Implementação de Linhas de Execução em TypeScript
 
 ## Introdução
 
-Este relato faz parte do processo avaliativo da disciplina de sistemas operacionas no curso superior em análise e desenvolvimento de sistemas, ofertado na Diretoria acadêmica de gestão e tecnologia da informação no campus natal-central do instituto federal de educação, ciência e tecnologia do rio grande do norte.
+O objetivo principal deste trabalho é relatar e analisar a implementação do conceito de linhas de execução (*threads* e concorrência) na linguagem TypeScript, por meio da "tradução" e reescrita das três questões propostas e disponibilizadas no repositório do GitHub.
 
-Tem como objetivo principal relatar como implementar linhas de execução na linguagem typescript.
+**Integrantes do Grupo:** Arkângelo, Jadson e Luiz.
 
-O grupo de trabalho foi formado por jadson,luiz e arkângelo.
+---
 
-## Implementando múltiplas linhas de execução em typescript
+## Implementando Múltiplas Linhas de Execução em TypeScript
 
-### Informações gerais sobre typescript
+### Informações Gerais sobre o TypeScript
 
+* **Objetivo e Paradigma:** O TypeScript é um *superset* (superconjunto) do JavaScript desenvolvido pela Microsoft que adiciona **tipagem estática opcional** e recursos modernos à linguagem base. Seu objetivo principal é capturar erros de tipo em tempo de compilação/desenvolvimento — e não em tempo de execução —, além de oferecer suporte a projetos de grande escala com melhor manutenibilidade e refatoração. É uma linguagem **multiparadigma**, suportando programação orientada a objetos, funcional e imperativa.
+* **Onde é Utilizado:** O TypeScript roda em qualquer ambiente onde o JavaScript é executado. Ele é amplamente utilizado tanto no **Front-end** (navegadores web através de *frameworks* como React, Angular e Vue.js) quanto no **Back-end** (servidores web e APIs de alta concorrência rodando no ecossistema Node.js, Deno ou Bun).
+* **Por que Escolhemos o TypeScript?** A escolha do TypeScript se deu devido à robustez do seu sistema de tipos, à legibilidade do código e à sua ampla adoção no mercado moderno de desenvolvimento. No contexto de Sistemas Operacionais, utilizar o TypeScript com o ambiente Node.js permite demonstrar como linguagens prioritariamente *single-threaded* gerenciam o paralelismo moderno e o processamento multinúcleo (*multicore*) sem perder a segurança dos tipos.
 
-> qual o objetivo e o paradgima da linguagem? O objetivo do TypeScript é adicionar tipagem estática ao JavaScript para evitar erros durante a escrita do código e facilitar o desenvolvimento de projetos grandes. Ele é uma linguagem multi-paradigma
-> esta disponível onde?Está disponível para execução em ambientes JavaScript e roda em todos os navegadores web
+---
 
-### Criando linhas de execução
+### Módulos e Conceitos de Execução Paralela
 
-Em TypeScript no Node.js, criamos threads de execução utilizando o módulo nativo worker_threads, instanciando a classe Worker e passando o caminho do arquivo de script a ser executado em paralelo.
+No ecossistema Node.js/TypeScript, por padrão, o código roda em um único thread da CPU (o *Event Loop*). Para criar e gerenciar **linhas de execução verdadeiramente paralelas**, utilizamos o módulo nativo **`worker_threads`**.
 
-### Passando valores para linhas de execução
+1. **Criando Linhas de Execução (`Worker`):** Instanciamos a classe `Worker`, passando o arquivo do script que deve ser executado em uma nova linha de execução paralela.
+2. **Passando e Recebendo Valores (`workerData` e `postMessage`):** 
+   * **Dados Iniciais:** Passamos informações para o Worker através da opção `workerData` na inicialização.
+   * **Mensagens Dinâmicas:** A comunicação assíncrona entre a thread principal e a thread do Worker ocorre por troca de mensagens com os métodos `worker.postMessage()` e escutando o canal via `parentPort.on('message', ...)`.
+3. **Gerenciamento de Múltiplas Threads (`Promise.all`):** Para executar várias threads em paralelo e aguardar o término de todas sem bloquear a aplicação principal, encapsulamos o ciclo de vida dos Workers em *Promises* e utilizamos `Promise.all()`.
 
-Para enviar dados para a linha de execução (Worker), passamos a propriedade workerData na criação do Worker ou enviamos mensagens dinâmicas utilizando o método worker.postMessage(dados). Dentro do Worker, recebemos os dados pelo evento parentPort.on('message', ...).
+---
 
-### Múltiplas linhas de execução
+### Exemplo Prático e Explicação do Código
 
-Para executar múltiplas threads simultaneamente, criamos um array de instâncias de Worker (ou um loop for) e gerenciamos o término de cada uma utilizando Promise.all() ou escutando o evento 'exit' de cada Worker.
+Abaixo está a demonstração da estrutura utilizada para resolver os desafios propostos, dividida entre a **Thread Principal** e a **Worker Thread**.
 
-## Considerações finais
+#### 1. Código da Worker Thread (`worker.ts`)
+Este script é executado em uma linha de execução separada:
 
-A utilização de Worker Threads em TypeScript permitiu executar tarefas em paralelo de forma eficiente no Node.js, aproveitando múltiplos núcleos do processador sem bloquear a thread principal da aplicação.
+```typescript
+import { parentPort, workerData } from 'worker_threads';
+
+// Interface para garantir tipagem estática nos dados recebidos
+interface TarefaPayload {
+  id: number;
+  inicio: number;
+  fim: number;
+}
+
+const payload = workerData as TarefaPayload;
+
+// Processamento pesado/intensivo em CPU na thread secundária
+let soma = 0;
+for (let i = payload.inicio; i <= payload.fim; i++) {
+  soma += i;
+}
+
+// Envia o resultado de volta para a thread principal
+if (parentPort) {
+  parentPort.postMessage({ id: payload.id, resultado: soma });
+}
