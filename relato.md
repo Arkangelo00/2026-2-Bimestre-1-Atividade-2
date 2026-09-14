@@ -59,3 +59,48 @@ for (let i = payload.inicio; i <= payload.fim; i++) {
 if (parentPort) {
   parentPort.postMessage({ id: payload.id, resultado: soma });
 }
+
+
+
+
+```Main.ts
+import { Worker } from 'worker_threads';
+import * as path from 'path';
+
+function executarThread(id: number, inicio: number, fim: number): Promise<number> {
+  return new Promise((resolve, reject) => {
+    // Instancia uma nova linha de execução (Worker)
+    const worker = new Worker(path.resolve(__dirname, 'worker.js'), {
+      workerData: { id, inicio, fim }
+    });
+
+    // Escuta o retorno do Worker
+    worker.on('message', (dados) => {
+      console.log(`Thread ${dados.id} finalizada com resultado: ${dados.resultado}`);
+      resolve(dados.resultado);
+    });
+
+    // Trata eventuais erros da thread
+    worker.on('error', reject);
+    worker.on('exit', (code) => {
+      if (code !== 0) reject(new Error(`Worker finalizou com código de erro ${code}`));
+    });
+  });
+}
+
+async function principal() {
+  console.log("Iniciando execução paralela com TypeScript Worker Threads...");
+
+  // Dispara 3 threads simultâneas
+  const tarefas = [
+    executarThread(1, 1, 1_000_000),
+    executarThread(2, 1001, 2_000_000),
+    executarThread(3, 2001, 3_000_000)
+  ];
+
+  // Aguarda a conclusão de todas as threads paralelas
+  const resultados = await Promise.all(tarefas);
+  console.log("Todas as threads concluídas. Resultados:", resultados);
+}
+
+principal();
