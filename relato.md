@@ -63,7 +63,8 @@ if (parentPort) {
 
 
 
-```Main.ts
+//Main.ts
+
 import { Worker } from 'worker_threads';
 import * as path from 'path';
 
