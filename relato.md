@@ -59,11 +59,11 @@ for (let i = payload.inicio; i <= payload.fim; i++) {
 if (parentPort) {
   parentPort.postMessage({ id: payload.id, resultado: soma });
 }
+```
 
+#### 2. Código Main.ts
 
-
-
-//Main.ts
+```typescript
 
 import { Worker } from 'worker_threads';
 import * as path from 'path';
